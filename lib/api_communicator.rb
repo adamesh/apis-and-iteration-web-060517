@@ -4,17 +4,30 @@ require 'pry-byebug'
 
 def get_character_movies_from_api(character)
   #make the web request
+  character_array = []
+
   all_characters = RestClient.get('http://www.swapi.co/api/people/')
   character_hash = JSON.parse(all_characters)
+
+  until character_hash["next"] == nil
+    character_array << character_hash["results"]
+    character_hash = JSON.parse(RestClient.get(character_hash["next"]))
+  end
+  character_array.flatten!
+
+  #get pagination
+
+
   # iterate over the character hash to find the collection of `films` for the given
   #   `character`
-  character_array = character_hash["results"]
+
   films_link_array = []
   character_array.each do |characters|
     if characters["name"].downcase == character
       films_link_array = characters["films"]
     end
   end
+
   films_array = films_link_array.map do |link|
     JSON.parse(RestClient.get(link))
   end
